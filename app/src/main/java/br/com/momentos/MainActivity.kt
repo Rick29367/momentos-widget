@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.*
 import java.text.SimpleDateFormat
@@ -15,6 +17,16 @@ import java.util.*
 class MainActivity : Activity() {
     private val prefs by lazy { getSharedPreferences("momentos", Context.MODE_PRIVATE) }
     private lateinit var list: LinearLayout
+    private val valueViews = mutableMapOf<String, TextView>()
+    private val timerHandler = Handler(Looper.getMainLooper())
+    private val secondTicker = object : Runnable {
+        override fun run() {
+            valueViews.forEach { (id, view) ->
+                Moment.all(prefs).firstOrNull { it.id == id }?.let { view.text = describe(it) }
+            }
+            timerHandler.postDelayed(this, 1000)
+        }
+    }
     private val pink = Color.rgb(210,105,145)
     override fun onCreate(savedInstanceState: Bundle?) { super.onCreate(savedInstanceState); render() }
     private fun render() {
@@ -28,12 +40,15 @@ class MainActivity : Activity() {
     }
     private fun refreshList() {
         list.removeAllViews()
+        valueViews.clear()
         val moments=Moment.all(prefs).sortedBy { if(it.countdown) it.dateMillis else -it.dateMillis }
         if(moments.isEmpty()) list.addView(TextView(this).apply { text="Nenhuma data cadastrada ainda.\nAdicione seu relacionamento, emprego, aniversários e conquistas."; textSize=16f; setTextColor(Color.DKGRAY); setPadding(8,30,8,8) })
         moments.forEach { m ->
             val card=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; setPadding(16,14,16,14); setBackgroundColor(Color.WHITE) }
             card.addView(TextView(this).apply { text="${m.emoji}  ${m.title}"; textSize=18f; setTextColor(Color.rgb(45,43,52)); setTypeface(null,1) })
-            card.addView(TextView(this).apply { text=describe(m); textSize=15f; setTextColor(pink); setPadding(0,8,0,0) })
+            val value = TextView(this).apply { text=describe(m); textSize=15f; setTextColor(pink); setPadding(0,8,0,0) }
+            valueViews[m.id] = value
+            card.addView(value)
             card.addView(TextView(this).apply { text=SimpleDateFormat("dd/MM/yyyy 'às' HH:mm",Locale("pt","BR")).format(Date(m.dateMillis))+"  •  "+if(m.countdown) "Contagem regressiva" else "Contagem crescente"; textSize=11f; setTextColor(Color.GRAY); setPadding(0,5,0,0) })
             val del=TextView(this).apply { text="Excluir"; textSize=12f; setTextColor(Color.RED); setPadding(0,10,0,0); setOnClickListener { Moment.remove(prefs,m.id); refreshList(); updateWidget() } }
             card.addView(del); val lp=LinearLayout.LayoutParams(-1,-2); lp.bottomMargin=12; list.addView(card,lp)
@@ -65,5 +80,6 @@ class MainActivity : Activity() {
         dlg.show()
     }
     private fun updateWidget() { sendBroadcast(Intent(this,MomentWidget::class.java).setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE).putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS,AppWidgetManager.getInstance(this).getAppWidgetIds(ComponentName(this,MomentWidget::class.java)))) }
-    override fun onResume(){ super.onResume(); if(::list.isInitialized) refreshList() }
+    override fun onResume(){ super.onResume(); if(::list.isInitialized) refreshList(); timerHandler.removeCallbacks(secondTicker); timerHandler.post(secondTicker) }
+    override fun onPause(){ timerHandler.removeCallbacks(secondTicker); super.onPause() }
 }
