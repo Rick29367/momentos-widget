@@ -9,19 +9,20 @@ data class Moment(
     val title: String,
     val dateMillis: Long,
     val emoji: String = "📅",
-    val countdown: Boolean = false
+    val countdown: Boolean = false,
+    val category: String = "Pessoal"
 ) {
     fun save(prefs: android.content.SharedPreferences) {
         val all = JSONArray(prefs.getString("moments", "[]"))
         val out = JSONArray()
         for (i in 0 until all.length()) if (all.getJSONObject(i).optString("id") != id) out.put(all.getJSONObject(i))
-        out.put(JSONObject().put("id",id).put("title",title).put("date",dateMillis).put("emoji",emoji).put("countdown",countdown))
+        out.put(JSONObject().put("id",id).put("title",title).put("date",dateMillis).put("emoji",emoji).put("countdown",countdown).put("category",category))
         prefs.edit().putString("moments",out.toString()).apply()
     }
     companion object {
         fun all(prefs: android.content.SharedPreferences): List<Moment> {
             val a=JSONArray(prefs.getString("moments","[]"))
-            return (0 until a.length()).map { val o=a.getJSONObject(it); Moment(o.optString("id"),o.optString("title"),o.optLong("date"),o.optString("emoji","📅"),o.optBoolean("countdown")) }
+            return (0 until a.length()).map { val o=a.getJSONObject(it); Moment(o.optString("id"),o.optString("title"),o.optLong("date"),o.optString("emoji","📅"),o.optBoolean("countdown"),o.optString("category","Pessoal")) }
         }
         fun remove(prefs: android.content.SharedPreferences,id:String) {
             val a=JSONArray(prefs.getString("moments","[]")); val b=JSONArray()
