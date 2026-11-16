@@ -1,0 +1,11 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+ android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+ android:orientation="vertical" android:padding="14dp" android:gravity="center_vertical"
+ android:background="#202735">
+ <TextView android:id="@+id/widget_title" android:layout_width="match_parent" android:layout_height="wrap_content"
+  android:text="❤️ Meu amor" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="15sp"/>
+ <TextView android:id="@+id/widget_value" android:layout_width="match_parent" android:layout_height="wrap_content"
+  android:text="Adicione uma data no Momentos" android:textColor="#F5A8C5" android:textSize="19sp" android:textStyle="bold" android:paddingTop="8dp"/>
+ <TextView android:id="@+id/widget_detail" android:layout_width="match_parent" android:layout_height="wrap_content"
+  android:text="Toque para abrir" android:textColor="#C6CAD5" android:textSize="11sp" android:paddingTop="4dp"/>
+</LinearLayout>
